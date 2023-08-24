@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module name="Resilience" prefix="resilience" vendor="MyCompany" 
+	doc:description="This resilience module relies in runtime provided components"
+
+	xmlns="http://www.mulesoft.org/schema/mule/module"
+	xmlns:mule="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:resilience="http://www.mulesoft.org/schema/mule/resilience"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+           http://www.mulesoft.org/schema/mule/module http://www.mulesoft.org/schema/mule/module/current/mule-module.xsd
+           http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+           http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+           http://www.mulesoft.org/schema/mule/resilience http://www.mulesoft.org/schema/mule/resilience/current/mule-resilience.xsd">
+
+	<operation name="set-payload-hello"
+		doc:description="Sets the payload to the String Hello World">
+		<body>
+			<mule:set-payload value="Hello World!" />
+		</body>
+		<output type="string" doc:description="Payload's output" />
+	</operation>
+
+	<operation name="greetings"
+		doc:description="Say greetings to a user">
+		<parameters>
+			<parameter name="name" 
+					defaultValue="Max" 
+					type="string" 
+					use="AUTO"
+				   role="BEHAVIOUR" />
+				   <!-- Role behavior is default, supports DW expression -->
+<!-- 				<parameter name="name" type="string" use="OPTIONAL"
+				role="CONTENT" />
+				<parameter name="lastname" type="string" use="OPTIONAL"
+				role="PRIMARY" /> -->
+		</parameters>
+		<body>
+			<mule:set-payload
+				value='#["Welcome to Mule " ++ vars["name"]]' />
+		</body>
+		<output type="string" doc:description="Payload's output" />
+	</operation>
+	
+	<operation name="is-endpoint-alive">
+		<parameters> 
+			<parameter name="url" displayName="URL" summary="Absolute URL to the health endpoint" type="string" use="REQUIRED" />
+			<parameter name="responseTimeoutMillis" displayName="Response Timeout" summary="timeout in milliseconds" type="string" use="AUTO" defaultValue="#[1000]" />
+			<parameter name="maxRetries" displayName="Max Retries" type="string"  use="AUTO" defaultValue="#[3]" />
+			<parameter name="millisBetweenRetries" displayName="Waiting Time for Retries" summary="Waiting time in milliseconds between each retry" type="string" use="AUTO" defaultValue="#[2000]" />
+<!-- 			<parameter name="path" 
+					defaultValue="/alive" 
+					type="string" 
+					use="AUTO"
+				   role="BEHAVIOUR" /> -->
+		</parameters>
+		<body>
+			<mule:until-successful
+				maxRetries="#[vars.maxRetries]"
+				millisBetweenRetries="#[vars.millisBetweenRetries]">
+				<mule:try>
+					<http:request method="GET"
+						url="#[vars.url]" followRedirects="true"
+						responseTimeout="#[vars.responseTimeoutMillis]">
+						<http:response-validator>
+							<http:success-status-code-validator
+								values="200" />
+						</http:response-validator>
+					</http:request>
+					<mule:set-payload value="#[true]" />
+					<mule:error-handler>
+						<mule:on-error-continue>
+							<mule:set-payload value="#[false]" />
+						</mule:on-error-continue>
+					</mule:error-handler>
+				</mule:try>
+			</mule:until-successful>
+		</body>
+		<output type="boolean"
+			doc:description="true or false if API endpoint is alive 200 OK" />
+	</operation>
+
+</module>
