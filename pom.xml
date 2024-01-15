@@ -114,6 +114,7 @@
 		</pluginManagement>
 
 		<plugins>
+			<!-- Only compiles the custom module -->
 			<plugin>
 				<groupId>org.mule.runtime.plugins</groupId>
 				<artifactId>mule-extensions-maven-plugin</artifactId>
@@ -123,6 +124,28 @@
 			<plugin>
 				<groupId>com.mulesoft.munit</groupId>
 				<artifactId>munit-extensions-maven-plugin</artifactId>
+			</plugin>
+			<!-- is in charge of exchange publication -->
+			<plugin>
+				<groupId>org.mule.tools.maven</groupId>
+				<artifactId>exchange-mule-maven-plugin</artifactId>
+				<version>0.0.20</version>
+				<executions>
+					<execution>
+						<id>validate</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>exchange-pre-deploy</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>deploy</id>
+						<phase>deploy</phase>
+						<goals>
+							<goal>exchange-deploy</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
